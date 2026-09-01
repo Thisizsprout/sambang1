@@ -1,1 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Vision Analytics | Teachable Machine</title>
+    <!-- Tailwind CSS for Modern Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Orbitron & Inter for Futuristic Look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Orbitron', 'sans-serif'],
+                    },
+                    colors: {
+                        cyber: {
+                            50: '#f0fdf4',
+                            500: '#10b981',
+                            600: '#059669',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .futuristic-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .glow-box {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+        }
+        .dark .glow-box {
+            box-shadow: 0 0 35px rgba(16, 185, 129, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
 
+    <!-- Header / Navbar -->
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center glow-box">
+                    <i class="fa-solid fa-brain text-slate-950 text-lg"></i>
+                </div>
+                <div>
+                    <span class="futuristic-font text-xl font-black tracking-wider bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">NEO-VISION</span>
+                    <span class="block text-xs text-slate-400 tracking-widest font-mono" data-i18n="subtitle">AI REAL-TIME ENGINE</span>
+                </div>
+            </div>
+
+            <!-- Controls: Theme & Language -->
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <select id="langSelect" class="bg-slate-800/80 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block px-3 py-2 outline-none cursor-pointer transition">
+                        <option value="ko">🇰🇷 한국어</option>
+                        <option value="en">🇺🇸 English</option>
+                    </select>
+                </div>
+
+                <button id="themeToggle" class="w-10 h-10 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-emerald-400 hover:border-emerald-500/50 transition">
+                    <i id="themeIcon" class="fa-solid fa-sun text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-6 py-10 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
+        
+        <!-- Left Column: Webcam & Initialization -->
+        <div class="lg:col-span-7 flex flex-col space-y-6">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 glow-box relative overflow-hidden">
+                <div class="absolute -right-16 -top-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="futuristic-font text-lg font-bold flex items-center space-x-2">
+                        <i class="fa-solid fa-video text-emerald-400"></i>
+                        <span data-i18n="feedTitle">LIVE VISION FEED</span>
+                    </h2>
+                    <button id="startBtn" onclick="init()" class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center space-x-2 transform active:scale-95">
+                        <i class="fa-solid fa-power-off"></i>
+                        <span data-i18n="startBtn">캠 켜기 및 실행</span>
+                    </button>
+                </div>
+
+                <!-- Webcam Display Area -->
+                <div class="relative aspect-video w-full bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+                    <div id="webcam-container" class="w-full h-full flex items-center justify-center">
+                        <div id="placeholderText" class="text-center p-6 text-slate-500 flex flex-col items-center space-y-3">
+                            <i class="fa-solid fa-camera-retro text-4xl animate-pulse text-emerald-500/50"></i>
+                            <p class="text-sm" data-i18n="placeholder">우측 상단 '캠 켜기 및 실행' 버튼을 누르세요.</p>
+                        </div>
+                    </div>
+                    <div id="statusBadge" class="absolute top-4 left-4 bg-slate-950/70 backdrop-blur border border-slate-800 px-3 py-1 rounded-full text-xs font-mono text-slate-400 flex items-center space-x-2">
+                        <span class="w-2 h-2 rounded-full bg-rose-500" id="statusDot"></span>
+                        <span id="statusText" data-i18n="statusStandby">STANDBY</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Real-time Analytics & Visualization -->
+        <div class="lg:col-span-5 flex flex-col space-y-6">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 glow-box">
+                <h2 class="futuristic-font text-lg font-bold flex items-center space-x-2 mb-6">
+                    <i class="fa-solid fa-chart-line text-emerald-400"></i>
+                    <span data-i18n="analyticsTitle">REAL-TIME ANALYTICS</span>
+                </h2>
+
+                <!-- Label & Probability Containers -->
+                <div id="label-container" class="space-y-4">
+                    <div class="text-slate-500 text-sm text-center py-8" data-i18n="waitingModel">
+                        캠을 켜면 티처블 머신 데이터가 실시간으로 연동됩니다.
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4 text-xs text-slate-400 flex items-center justify-between font-mono">
+                <span>MODEL: TM-IMAGE-MODEL</span>
+                <span class="text-emerald-400">TFJS v1.7.4</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 font-mono">
+        <p>&copy; 2026 NEO-VISION AI ANALYTICS. All Rights Reserved.</p>
+    </footer>
+
+    <!-- TensorFlow.js and Teachable Machine Image Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+    <script>
+        const translations = {
+            ko: {
+                subtitle: "AI 실시간 비전 엔진",
+                feedTitle: "실시간 비전 피드",
+                startBtn: "캠 켜기 및 실행",
+                placeholder: "우측 상단 '캠 켜기 및 실행' 버튼을 누르세요.",
+                statusStandby: "대기 중",
+                statusActive: "AI 연동 가동 중",
+                analyticsTitle: "실시간 확률 분석",
+                waitingModel: "캠을 켜면 티처블 머신 데이터가 실시간으로 연동됩니다."
+            },
+            en: {
+                subtitle: "AI REAL-TIME ENGINE",
+                feedTitle: "LIVE VISION FEED",
+                startBtn: "Start Cam & AI",
+                placeholder: "Click 'Start Cam & AI' above to begin.",
+                statusStandby: "STANDBY",
+                statusActive: "ACTIVE",
+                analyticsTitle: "REAL-TIME ANALYTICS",
+                waitingModel: "Analytics will appear here once the webcam starts."
+            }
+        };
+
+        let currentLang = 'ko';
+
+        document.getElementById('langSelect').addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            updateTexts();
+        });
+
+        function updateTexts() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.innerText = translations[currentLang][key];
+                }
+            });
+        }
+
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (htmlElement.getAttribute('data-theme') === 'dark') {
+                htmlElement.setAttribute('data-theme', 'light');
+                themeIcon.className = 'fa-solid fa-moon text-sm';
+                document.body.classList.remove('bg-slate-950', 'text-slate-100');
+                document.body.classList.add('bg-slate-50', 'text-slate-900');
+            } else {
+                htmlElement.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fa-solid fa-sun text-sm';
+                document.body.classList.remove('bg-slate-50', 'text-slate-900');
+                document.body.classList.add('bg-slate-950', 'text-slate-100');
+            }
+        });
+
+        const URL = "./my_model/";
+        let model, webcam, labelContainer, maxPredictions;
+        let isInitialized = false;
+
+        async function init() {
+            if (isInitialized) return;
+            
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
+            startBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Loading...`;
+
+            try {
+                const modelURL = URL + "model.json";
+                const metadataURL = URL + "metadata.json";
+
+                // 1. 모델과 웹캠 동시 초기화 로드
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+
+                const flip = true;
+                webcam = new tmImage.Webcam(400, 300, flip);
+                await webcam.setup();
+                await webcam.play();
+                
+                // 2. 웹캠 캔버스 화면에 부착
+                const webcamContainer = document.getElementById("webcam-container");
+                webcamContainer.innerHTML = "";
+                webcamContainer.appendChild(webcam.canvas);
+
+                // 3. 티처블 머신 라벨에 맞는 프로그레스 바 동적 생성
+                labelContainer = document.getElementById("label-container");
+                labelContainer.innerHTML = "";
+                for (let i = 0; i < maxPredictions; i++) {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "space-y-1.5";
+                    wrapper.innerHTML = `
+                        <div class="flex justify-between text-sm font-medium">
+                            <span id="label-name-${i}" class="font-mono text-slate-300">Class</span>
+                            <span id="label-prob-${i}" class="font-mono text-emerald-400">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/50">
+                            <div id="bar-${i}" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-100" style="width: 0%"></div>
+                        </div>
+                    `;
+                    labelContainer.appendChild(wrapper);
+                }
+
+                isInitialized = true;
+                document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('statusText').innerText = currentLang === 'ko' ? "가동 중" : "ACTIVE";
+                startBtn.style.display = 'none';
+
+                // 4. 즉시 예측 루프(Loop) 실행
+                window.requestAnimationFrame(loop);
+
+            } catch (error) {
+                console.error("Initialization error:", error);
+                alert(currentLang === 'ko' ? "모델 로드 실패! my_model 폴더 경로 및 파일(model.json 등)을 확인하세요." : "Failed to load model! Please check the my_model folder.");
+                startBtn.disabled = false;
+                startBtn.innerHTML = `<i class="fa-solid fa-power-off"></i> ${translations[currentLang].startBtn}`;
+            }
+        }
+
+        async function loop() {
+            webcam.update();
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        async function predict() {
+            const prediction = await model.predict(webcam.canvas);
+            for (let i = 0; i < maxPredictions; i++) {
+                const className = prediction[i].className;
+                const probability = (prediction[i].probability * 100).toFixed(1);
+
+                const nameEl = document.getElementById(`label-name-${i}`);
+                const probEl = document.getElementById(`label-prob-${i}`);
+                const barEl = document.getElementById(`bar-${i}`);
+
+                if (nameEl && probEl && barEl) {
+                    nameEl.innerText = className;
+                    probEl.innerText = `${probability}%`;
+                    barEl.style.width = `${probability}%`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
